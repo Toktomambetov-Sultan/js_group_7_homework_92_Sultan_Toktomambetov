@@ -6,6 +6,9 @@ const connections = {};
 router.ws("/", (ws, req) => {
   const id = nanoid();
   connections[id] = ws;
+  ws.onopen = (message) => {
+    console.log(message);
+  };
   ws.onmessage = (message) => {
     ws.send("");
   };
