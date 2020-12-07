@@ -63,7 +63,6 @@ export const authorization = (data) => {
     try {
       const response = await axiosOrder.post("/users/sessions", data);
       dispatch(setUserData(response.data));
-      console.log(response.data);
       dispatch(fetchSuccess());
       dispatch(push(redirect));
     } catch (error) {

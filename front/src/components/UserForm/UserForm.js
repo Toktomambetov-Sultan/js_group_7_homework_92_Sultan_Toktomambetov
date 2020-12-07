@@ -21,7 +21,6 @@ const UserForm = ({
   hide,
 }) => {
   const isLoading = useSelector((state) => state.user.isLoading);
-  console.log(hide);
   return (
     <Container component="main" maxWidth="xs">
       <CssBaseline />
