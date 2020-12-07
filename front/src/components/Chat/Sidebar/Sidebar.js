@@ -12,7 +12,6 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const Sidebar = ({ users }) => {
-  console.log(users);
   const classes = useStyles();
   return (
     <div className={classes.sidebar}>

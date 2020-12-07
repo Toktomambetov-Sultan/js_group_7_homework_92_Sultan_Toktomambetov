@@ -8,19 +8,25 @@ const changeUser = (connections) => {
     (key) => connections[key]
   );
   connectionsArray.forEach((connection) => {
-    connection.ws.send(
-      JSON.stringify({
-        type: "CHANGE_USERS",
-        users: connectionsArray.map((connection) => connection.user),
-      })
-    );
+    try {
+      connection.ws.send(
+        JSON.stringify({
+          type: "CHANGE_USERS",
+          users: connectionsArray.map((connection) => connection.user),
+        })
+      );
+    } catch (error) {
+      console.log(error);
+    }
   });
 };
 
 const connections = {};
 router.ws("/", async (ws, req) => {
   await authorizationWsMiddleware(ws, req);
+  console.log(req.user);
   connections[req.user._id] = { ws, user: req.user };
+
   ws.onmessage = async (message) => {
     try {
       let users;
@@ -31,6 +37,7 @@ router.ws("/", async (ws, req) => {
           changeUser(connections);
           users = Object.keys(connections).map((key) => connections[key].user);
           messages = await schema.Message.find()
+            .populate("user")
             .sort({ datatime: -1 })
             .limit(30);
           ws.send(
@@ -43,24 +50,25 @@ router.ws("/", async (ws, req) => {
           break;
         case "ADD_MESSAGE":
           const message = new schema.Message({
-            text: data.message.text,
-            user: data.message.user,
+            text: data.text,
+            user: req.user._id,
           });
-          await message.save();
+          await (await message.save()).populate("user").execPopulate();
           Object.keys(connections).map((key) => {
-            connection[key].ws.send(
+            connections[key].ws.send(
               JSON.stringify({
                 type: "GET_MESSAGE",
-                message: message,
+                message,
               })
             );
           });
           break;
         default:
-          ws.send(JSON.stringify({ type: "error", error: "Wrong type." }));
+          ws.send(JSON.stringify({ type: "ERROR", error: "Wrong type." }));
       }
     } catch (error) {
-      ws.send(JSON.stringify({ type: "error", error: "Wrong request." }));
+      console.log(error);
+      ws.send(JSON.stringify({ type: "ERROR", error: "Wrong request." }));
     }
   };
   ws.onclose = () => {

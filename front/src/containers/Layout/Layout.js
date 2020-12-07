@@ -34,7 +34,7 @@ const Layout = ({ children }) => {
   };
   return (
     <div>
-      <AppBar component={Box} position="static" pb={2}>
+      <AppBar component={Box} position="static" pb={2} mb={2}>
         <Toolbar>
           <Container>
             <Grid container direction="column">
