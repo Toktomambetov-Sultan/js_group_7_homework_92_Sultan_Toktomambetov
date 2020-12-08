@@ -1,5 +1,5 @@
 import { Button, CssBaseline, Grid, TextField } from "@material-ui/core";
-import React from "react";
+import React, { useRef } from "react";
 import { HotKeys } from "react-hotkeys";
 import { configure } from "react-hotkeys";
 
@@ -15,7 +15,7 @@ const ChatMessageForm = ({ onChange, message, onSubmit }) => {
   const handlers = {
     KEY: (e) => {
       e.preventDefault();
-      onSubmit(e);
+      message.text && onSubmit(e);
     },
   };
   return (

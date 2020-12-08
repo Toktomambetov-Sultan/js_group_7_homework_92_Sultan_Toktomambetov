@@ -1,4 +1,5 @@
 import {
+  DELETE_MESSAGE,
   FETCH_CHAT_ERROR,
   FETCH_CHAT_REQUEST,
   FETCH_CHAT_SUCCESS,
@@ -15,7 +16,7 @@ const initialState = {
 const reducer = (state = initialState, action) => {
   switch (action.type) {
     case SET_CHAT_MESSAGES:
-      return { ...state, messages: [...state.messages, ...action.data] };
+      return { ...state, messages: action.data };
     case SET_CHAT_USERS:
       return { ...state, users: action.data };
     case FETCH_CHAT_REQUEST:

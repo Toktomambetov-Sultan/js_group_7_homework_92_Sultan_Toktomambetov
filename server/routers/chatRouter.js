@@ -24,26 +24,24 @@ const changeUser = (connections) => {
 const connections = {};
 router.ws("/", async (ws, req) => {
   await authorizationWsMiddleware(ws, req);
-  console.log(req.user);
   connections[req.user._id] = { ws, user: req.user };
 
   ws.onmessage = async (message) => {
     try {
-      let users;
       let messages;
       const data = JSON.parse(message.data);
       switch (data.type) {
         case "INIT":
+          messages = (
+            await schema.Message.find()
+              .populate("user")
+              .sort({ datatime: -1 })
+              .limit(30)
+          ).reverse();
           changeUser(connections);
-          users = Object.keys(connections).map((key) => connections[key].user);
-          messages = await schema.Message.find()
-            .populate("user")
-            .sort({ datatime: -1 })
-            .limit(30);
           ws.send(
             JSON.stringify({
               type: "INIT",
-              users,
               messages,
             })
           );
@@ -53,15 +51,50 @@ router.ws("/", async (ws, req) => {
             text: data.text,
             user: req.user._id,
           });
-          await (await message.save()).populate("user").execPopulate();
+          await message.save();
+          messages = (
+            await schema.Message.find()
+              .populate("user")
+              .sort({ datatime: -1 })
+              .limit(30)
+          ).reverse();
+
           Object.keys(connections).map((key) => {
             connections[key].ws.send(
               JSON.stringify({
                 type: "GET_MESSAGE",
-                message,
+                messages,
               })
             );
           });
+          break;
+        case "DELETE_MESSAGE":
+          if (req.user.role === "moderator") {
+            await schema.Message.findByIdAndDelete(data.id);
+
+            messages = (
+              await schema.Message.find()
+                .populate("user")
+                .sort({ datatime: -1 })
+                .limit(30)
+            ).reverse();
+            Object.keys(connections).map((key) => {
+              connections[key].ws.send(
+                JSON.stringify({
+                  type: "DELETE_MESSAGE",
+                  id: data.id,
+                  messages,
+                })
+              );
+            });
+          } else {
+            ws.send(
+              JSON.stringify({
+                type: "ERROR",
+                error: "Wrong role.",
+              })
+            );
+          }
           break;
         default:
           ws.send(JSON.stringify({ type: "ERROR", error: "Wrong type." }));

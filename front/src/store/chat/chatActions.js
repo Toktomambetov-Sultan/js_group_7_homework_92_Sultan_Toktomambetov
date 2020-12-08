@@ -1,4 +1,5 @@
 import {
+  DELETE_MESSAGE,
   FETCH_CHAT_ERROR,
   FETCH_CHAT_REQUEST,
   FETCH_CHAT_SUCCESS,
@@ -35,6 +36,7 @@ const setUsers = (data) => {
   };
 };
 
+
 export const wsOnMessage = (message) => {
   console.log();
   return async (dispatch) => {
@@ -43,14 +45,16 @@ export const wsOnMessage = (message) => {
       const data = JSON.parse(message.data);
       switch (data.type) {
         case "INIT":
-          dispatch(setUsers(data.users));
           dispatch(setMessages(data.messages));
           break;
         case "GET_MESSAGE":
-          dispatch(setMessages([data.message]));
+          dispatch(setMessages(data.messages));
           break;
         case "CHANGE_USERS":
           dispatch(setUsers(data.users));
+          break;
+        case "DELETE_MESSAGE":
+          dispatch(setMessages(data.messages));
           break;
         default:
           console.log("Wrong type.");
